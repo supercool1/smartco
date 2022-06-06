@@ -23,9 +23,6 @@ namespace smartco{
     int Thread::join(){
         return pthread_join(m_thread, nullptr);
     }
-    bool Thread::joinable(){
-        return false;
-    }
     int Thread::detach(){
         return pthread_detach(m_thread);
     }

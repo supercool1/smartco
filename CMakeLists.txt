@@ -14,19 +14,23 @@ OPTION (TEXT                  "Build tests"                            ON)
 
 
 
-set (CMAKE_CXX_FLAGS "-fPIC -std=c++11 -Wall -Werror")
+set (CMAKE_CXX_FLAGS "-fPIC -std=c++11 -Wall")
 set (CMAKE_CXX_FLAGS_DEBUG "${CMAKE_CXX_FLAGS} -g -O0")
 set (CMAKE_CXX_FLAGS_RELEASE "${CMAKE_CXX_FLAGS} -o3")
 
 include_directories(${CMAKE_SOURCE_DIR}/smartco)
 MESSAGE(${CMAKE_SOURCE_DIR}/smartco)
 
-file(GLOB SOURCE_FILE  ${CMAKE_SOURCE_DIR}/smartco/*.cpp)
+file(GLOB SOURCE_FILE  ${CMAKE_SOURCE_DIR}/smartco/*.cc)
 
 add_library(smartco SHARED ${SOURCE_FILE})
 target_link_libraries(smartco   -pthread )
 
 if(TEXT)
-   add_executable(test_ ${CMAKE_SOURCE_DIR}/test/test_thread.cpp)
-   target_link_libraries(test_  smartco -pthread)
+   add_executable(test_thread ${CMAKE_SOURCE_DIR}/test/test_thread.cc)
+   target_link_libraries(test_thread  smartco -pthread)
+
+   add_executable(test_fiber ${CMAKE_SOURCE_DIR}/test/test_fiber.cc)
+   target_link_libraries(test_fiber  smartco -pthread)
+
 endif()

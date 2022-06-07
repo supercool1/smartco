@@ -23,9 +23,11 @@ enum status{
 };
 typedef std::shared_ptr<Fiber> ptr;
     Fiber();
-    Fiber(std::function<void()> cb, size_t stacksize = 0);
+    Fiber(std::function<void()> cb, size_t stacksize = 1024000);
     void swapin();
     void swapout();
+    void setid();
+    void setstatus(status);
     status getstatus();
     static void run();
     ucontext_t * get_ctx();
@@ -35,6 +37,8 @@ typedef std::shared_ptr<Fiber> ptr;
     //获取当前协程
     static Fiber::ptr get_cur_fiber();
     static void Yield();
+    static void YieldToReady();
+    static void CreateMainFiber();
 
 
 private:

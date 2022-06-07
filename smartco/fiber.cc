@@ -1,24 +1,27 @@
 #include "fiber.h"
-
+#include<iostream>
 
 namespace smartco{
 
 static thread_local Fiber::ptr cur_fiber = nullptr;           // 当前协程
 static thread_local Fiber::ptr cur_thread_main_Fiber = nullptr; // 主协程智能指针
 
-Fiber::Fiber(){
+Fiber::Fiber():m_fiber_id(""){
     if(getcontext(&m_context_t)){
         throw std::logic_error("getcontext error");
+    }
+    m_fiber_id = "unamed";
+}
+void Fiber::CreateMainFiber(){
+    if(!cur_thread_main_Fiber.get()){
+        Fiber::ptr main_fiber(new Fiber);
+        cur_thread_main_Fiber = main_fiber;
     }
 }
 
 Fiber::Fiber(std::function<void()> cb, size_t stacksize):m_cb(cb),m_stack_size(stacksize){
-
-    if(!cur_thread_main_Fiber){
-        Fiber::ptr main_fiber(new Fiber);
-        cur_thread_main_Fiber = main_fiber;
-    }
-
+    CreateMainFiber();
+    setid();
     if(getcontext(&m_context_t)){
         throw std::logic_error("getcontext error");
     }
@@ -66,13 +69,29 @@ Fiber::ptr Fiber::get_fiber_ptr(){
     return shared_from_this();
 }
 
+
 void Fiber::Yield(){
     Fiber::ptr cur = get_cur_fiber();
+    cur->setstatus(Fiber::status::HOLD);
     cur->swapout();
-} 
+}
+
+void Fiber::YieldToReady(){
+    Fiber::ptr cur = get_cur_fiber();
+    cur->setstatus(Fiber::status::READY);
+    cur->swapout();
+}
 
 Fiber::status Fiber::getstatus(){
     return m_status;
+}
+
+void Fiber::setstatus(Fiber::status s){
+    m_status = s;
+}
+
+void Fiber::setid(){
+    smartco::SetFiberId(m_fiber_id);
 }
 
 

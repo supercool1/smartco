@@ -5,7 +5,7 @@ project(smartco)
 # set(EXECUTABLE_OUTPUT_PATH ${CMAKE_SOURCE_DIR}/install/lib)
 
 if (NOT CMAKE_BUILD_TYPE)
-   set (CMAKE_BUILD_TYPE "Release") #"Release" "Debug"
+   set (CMAKE_BUILD_TYPE "Debug") #"Release" "Debug"
    message (
       STATUS "No CMAKE_BUILD_TYPE selected, defaulting to ${CMAKE_BUILD_TYPE}"
    )
@@ -32,5 +32,8 @@ if(TEXT)
 
    add_executable(test_fiber ${CMAKE_SOURCE_DIR}/test/test_fiber.cc)
    target_link_libraries(test_fiber  smartco -pthread)
+
+   add_executable(test_scheduler ${CMAKE_SOURCE_DIR}/test/test_scheduler.cc)
+   target_link_libraries(test_scheduler  smartco -pthread)
 
 endif()

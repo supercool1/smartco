@@ -60,6 +60,9 @@
         "condition_variable": "cpp",
         "*.ipp": "cpp",
         "bitset": "cpp",
-        "any": "cpp"
+        "any": "cpp",
+        "hash_map": "cpp",
+        "hash_set": "cpp",
+        "deque": "cpp"
     }
 }

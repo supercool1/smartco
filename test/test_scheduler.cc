@@ -21,7 +21,17 @@ void fun2(){
         smartco::Fiber::YieldToReady();
     }
 }
+
+void fun4(){
+    while(true){
+        printf("fiber4\n");
+        sleep(2);
+        smartco::Fiber::YieldToReady();
+    }
+}
+
 void fun3(){
+    smartco::Scheduler::get_cur_scheduler()->scheduler(fun4);
     while(true){
         printf("fiber3\n");
         sleep(2);
@@ -54,12 +64,12 @@ public:
 };
 
 int main(){
-    smartco::Singleton<smartco::Scheduler>::GetInstance().init();
-    smartco::Singleton<smartco::Scheduler>::GetInstance().scheduler(fun1);
-    smartco::Singleton<smartco::Scheduler>::GetInstance().scheduler(fun2);
-    smartco::Singleton<smartco::Scheduler>::GetInstance().scheduler(fun3);
+    smartco::Scheduler* m_scheduler = new smartco::Scheduler();
+    m_scheduler->scheduler(fun1);
+    m_scheduler->scheduler(fun2);
+    m_scheduler->scheduler(fun3);
    
-   smartco::Singleton<smartco::Scheduler>::GetInstance().start();
+    m_scheduler->start();
 
     // A a = A();
     

@@ -25,7 +25,7 @@ file(GLOB SOURCE_FILE  ${CMAKE_SOURCE_DIR}/smartco/*.cc)
 
 add_library(smartco SHARED ${SOURCE_FILE})
 target_link_libraries(smartco   -pthread )
-
+message(${SOURCE_FILE})
 if(TEXT)
    add_executable(test_thread ${CMAKE_SOURCE_DIR}/test/test_thread.cc)
    target_link_libraries(test_thread  smartco -pthread)
@@ -35,5 +35,8 @@ if(TEXT)
 
    add_executable(test_scheduler ${CMAKE_SOURCE_DIR}/test/test_scheduler.cc)
    target_link_libraries(test_scheduler  smartco -pthread)
+   
 
+   add_executable(test_iomanager ${CMAKE_SOURCE_DIR}/test/test_iomanager.cc)
+   target_link_libraries(test_iomanager  smartco -pthread)
 endif()

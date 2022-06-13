@@ -8,13 +8,13 @@
 #include <vector>
 #include <list>
 namespace smartco{
-
-class Scheduler:public Singleton<Scheduler>
+#define STACK_DEFINE_SIZE 4096
+class Scheduler
 {
 private:
     
 public:
-    void init(int thread_nums = 1, bool use_main_thread = true, const std::string& name = "undefine");
+    Scheduler(int thread_nums = 1, bool use_main_thread = true, const std::string& name = "undefine");
     struct task{
         Fiber::ptr m_fiber;       
         std::function<void()> cb;
@@ -34,8 +34,8 @@ public:
         
 
     };
-    void scheduler(Fiber::ptr m_fiber, int thread_id = -1, int stacksize = 0);
-    void scheduler(std::function<void()> cb, int thread_id = -1, int stacksize = 0);
+    void scheduler(Fiber::ptr m_fiber, int thread_id = -1, int stacksize = STACK_DEFINE_SIZE);
+    void scheduler(std::function<void()> cb, int thread_id = -1, int stacksize = STACK_DEFINE_SIZE);
     void schedulerunlock(task & m_task);
     void run();
     void start();
@@ -47,15 +47,16 @@ public:
         return false;
     }
     virtual void idle();
-
-
+    //获取当前协程
+    static Scheduler* get_cur_scheduler();
+    void set_cur_scheduler();
 private:
-    std::string m_name;
     //list是链表实现的，删除其中某个成员成本比vector小
     std::list<task> task_list;    //任务列表
     // std::vector<task> task_list;
-    int thread_nums = 0;
-    bool use_main_thread = true;
+    int thread_nums;
+    bool use_main_thread;
+    std::string m_name;
     std::vector<Thread::ptr> thread_list;
     Mutex m_mutex;
     Fiber::ptr m_idel_fiber;

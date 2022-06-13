@@ -44,10 +44,10 @@ typedef std::shared_ptr<Fiber> ptr;
 private:
     ucontext_t m_context_t;
     std::string m_fiber_id;
-    uint32_t m_stack_size = 0;
     void* m_stack = nullptr;
     status m_status;
     std::function<void()>  m_cb;
+    uint32_t m_stack_size;
 
 };
 

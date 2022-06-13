@@ -63,6 +63,8 @@
         "any": "cpp",
         "hash_map": "cpp",
         "hash_set": "cpp",
-        "deque": "cpp"
+        "deque": "cpp",
+        "typeindex": "cpp",
+        "codecvt": "cpp"
     }
 }

@@ -4,11 +4,11 @@
 
 
 namespace smartco{
+static thread_local Scheduler* cur_scheduler = nullptr;           // 当前调度器
 
-void Scheduler::init(int thread_nums, bool use_main_thread, const std::string& name){
-    this->thread_nums = thread_nums;
-    this->use_main_thread = use_main_thread;
-    this->m_name = name;
+Scheduler::Scheduler(int thread_nums, bool use_main_thread, const std::string& name):thread_nums(thread_nums),
+                                                                                     use_main_thread(use_main_thread),
+                                                                                     m_name(name){
 }
 
 void Scheduler::scheduler(Fiber::ptr m_fiber, int thread_id, int stacksize){
@@ -62,6 +62,8 @@ void Scheduler::start(){
 }
 
 void Scheduler::run(){
+    // 设置当前线程的调度器
+    set_cur_scheduler();
     //初始化idel协程，当任务队列为空的时候执行该协程
     m_idel_fiber.reset(new Fiber(std::bind(&Scheduler::idle, this)));
     task m_task;
@@ -84,7 +86,7 @@ void Scheduler::run(){
         }
         // 判断协程实例是否存在，将协程实例放在这里生成，有助于性能分散到多线程上
         if(m_task.cb){
-            m_task.m_fiber.reset(new Fiber(m_task.cb));
+            m_task.m_fiber.reset(new Fiber(m_task.cb, m_task.stacksize));
         }
 
         //开始调用协程,如果协程就绪则执行，其余情况丢弃，规定只有就绪的协程才能进入执行队列
@@ -118,4 +120,11 @@ void Scheduler::ticket(){
 
 }
 
+Scheduler* Scheduler::get_cur_scheduler(){
+    return cur_scheduler;
+}
+
+void Scheduler::set_cur_scheduler(){
+    cur_scheduler = this;
+}
 }

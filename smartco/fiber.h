@@ -23,7 +23,7 @@ enum status{
 };
 typedef std::shared_ptr<Fiber> ptr;
     Fiber();
-    Fiber(std::function<void()> cb, size_t stacksize = 1024000);
+    Fiber(std::function<void()> cb, size_t stacksize = 4096);
     void swapin();
     void swapout();
     void setid();

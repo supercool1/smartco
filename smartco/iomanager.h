@@ -76,8 +76,11 @@ public:
     bool delAndRunEvent(int fd, IOmanager::Event event);
 
     void idle();
+
+    static IOmanager* get_cur_iomanager();
 private:
     void readAll();
+    void event_ctx_list_resize(int size);
     int epfd;
     std::vector<event_ctx*> event_ctx_list;
     RWMutex rwmutex;

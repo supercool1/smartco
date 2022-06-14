@@ -3,6 +3,9 @@
 #include <iostream>
 #include <fcntl.h>
 #include <memory>
+#include "iomanager.h"
+// #include "scheduler.h"
+
 // 设置非阻塞
 int setnonblocking(int fd)
 {
@@ -13,46 +16,46 @@ int setnonblocking(int fd)
 }
 // 测试写阻塞(非阻塞)，当缓冲区满的时候，写就会阻塞(返回EAGAIN)
 void writeblock(){
-    int filedes[2];
+    int file[2];
     int rt = 0;
-    rt = pipe(filedes);
+    rt = pipe(file);
     if(rt == 0){
-        printf("new pipe success %d %d\n", filedes[0], filedes[1]);
+        printf("new pipe success %d %d\n", file[0], file[1]);
     }
-    setnonblocking(filedes[0]);
-    setnonblocking(filedes[1]);
+    setnonblocking(file[0]);
+    setnonblocking(file[1]);
     
     // 写入数据
     char str[11] = "hello word";
 
     int time = 6000;
     while(time--){
-        rt = write(filedes[1], str, 11);
+        rt = write(file[1], str, 11);
         if(rt <= 0){
             printf("write error %d %d \n", errno, EAGAIN);
         }
         printf("write size : %d\n", rt);
     }
 
-    close(filedes[0]);
-    close(filedes[1]);
+    close(file[0]);
+    close(file[1]);
 }
 
 // 写事件的触发
 void writeeven(){
     int efd = epoll_create(1000);
-    int filedes[2];
+    int file[2];
     int rt = 0;
-    rt = pipe(filedes);
+    rt = pipe(file);
     if(rt == 0){
-        printf("new pipe success %d %d\n", filedes[0], filedes[1]);
+        printf("new pipe success %d %d\n", file[0], file[1]);
     }
-    setnonblocking(filedes[0]);
-    setnonblocking(filedes[1]);
+    setnonblocking(file[0]);
+    setnonblocking(file[1]);
     epoll_event event;
-    event.data.fd = filedes[1];
+    event.data.fd = file[1];
     event.events = EPOLLOUT|EPOLLET;
-    epoll_ctl(efd, EPOLL_CTL_ADD, filedes[1], &event);
+    epoll_ctl(efd, EPOLL_CTL_ADD, file[1], &event);
     epoll_event event_get[10];
 
     char str[11] = "hello word";
@@ -60,79 +63,125 @@ void writeeven(){
     {
         rt = epoll_wait(efd, event_get, 10, -1);
         printf("rec %d events\n", rt);
-        rt = write(filedes[1], str, 11);
+        rt = write(file[1], str, 11);
         if(rt <= 0){
             printf("write error %d %d \n", errno, EAGAIN);
         }
         char str2[11];
-        rt = read(filedes[0], str2, 11);
+        rt = read(file[0], str2, 11);
         printf("write size : %d\n", rt);
     }
     
 
-    close(filedes[0]);
-    close(filedes[1]);
+    close(file[0]);
+    close(file[1]);
     close(efd);
 }
 
 // 写事件的触发
 void readeven(){
     int efd = epoll_create(1000);
-    int filedes[2];
+    int file[2];
     int rt = 0;
-    rt = pipe(filedes);
+    rt = pipe(file);
     if(rt == 0){
-        printf("new pipe success %d %d\n", filedes[0], filedes[1]);
+        printf("new pipe success %d %d\n", file[0], file[1]);
     }
-    // setnonblocking(filedes[0]);
-    // setnonblocking(filedes[1]);
+    // setnonblocking(file[0]);
+    // setnonblocking(file[1]);
     epoll_event event;
-    event.data.fd = filedes[0];
+    event.data.fd = file[0];
     event.events = EPOLLIN|EPOLLET;
-    epoll_ctl(efd, EPOLL_CTL_ADD, filedes[0], &event);
+    epoll_ctl(efd, EPOLL_CTL_ADD, file[0], &event);
     epoll_event event_get[10];
 
     while (1)
     {
-        // rt = write(filedes[1], str, 11);
+        // rt = write(file[1], str, 11);
         rt = epoll_wait(efd, event_get, 10, 1000);
         printf("rec %d events\n", rt);
         if(rt <= 0){
             printf("write error %d %d \n", errno, EAGAIN);
         }
         // char str2[11];
-        // rt = read(filedes[0], str2, 11);
+        // rt = read(file[0], str2, 11);
         // printf("write size : %d\n", rt);
     }
     
 
-    close(filedes[0]);
-    close(filedes[1]);
+    close(file[0]);
+    close(file[1]);
     close(efd);
 }
-class test_iomanager
-{
-private:
-    /* data */
-public:
-    test_iomanager(/* args */);
-    ~test_iomanager();
-};
 
-test_iomanager::test_iomanager(/* args */)
-{
+
+// 测试代码
+int file[2];
+smartco::IOmanager* iomanager = nullptr;
+
+void fun2(){
+    while (1)
+    {   
+        sleep(1);
+        smartco::IOmanager::get_cur_iomanager()->addEvent(file[0], smartco::IOmanager::READ);
+        smartco::Fiber::Yield();
+        printf("trigger read fun\n");
+        uint8_t dummy[256];
+        while(read(file[0], dummy, sizeof(dummy)) > 0);      
+    }
 }
 
-test_iomanager::~test_iomanager()
-{
+
+void fun3(){
+    printf("read fun3\n");
+    char str[11] = "hello word";
+    while (1)
+    {
+        sleep(1);
+        smartco::IOmanager::get_cur_iomanager()->addEvent(file[1], smartco::IOmanager::WRITE);
+        smartco::Fiber::Yield();
+        printf("trigger write fun\n");
+        uint8_t dummy[256];
+        write(file[1], str, 11);  
+    }
 }
+void test_fiber_wake_up(){
+    int rt = pipe(file);
+    setnonblocking(file[0]);
+    setnonblocking(file[1]);
+    iomanager = new smartco::IOmanager();
+    iomanager->scheduler(fun2);
+    iomanager->scheduler(fun3);
+    iomanager->start();
+}
+
+void fun_cb2(){
+    printf("trigger fun_cb2\n");
+}
+
+void fun_cb(){
+    char str[11] = "hello word";
+
+    printf("trigger funcb\n");
+    smartco::IOmanager::get_cur_iomanager()->addEvent(file[0], smartco::IOmanager::READ, &fun_cb2);
+    write(file[1], str, 11); 
+    smartco::Fiber::Yield();
+    
+}
+
+
+void test_fun_cb(){
+    int rt = pipe(file);
+    setnonblocking(file[0]);
+    setnonblocking(file[1]);
+    iomanager = new smartco::IOmanager();
+    iomanager->scheduler(fun_cb);
+    iomanager->start();
+}
+
 
 
 int main(){
-    std::shared_ptr<test_iomanager> a(nullptr);
-    if(a){
-        std::cout<<"asdads"<<std::endl;
-    }else{
-        std::cout<<"ddddddd"<<std::endl;
-    }
+    test_fun_cb();
+
 }

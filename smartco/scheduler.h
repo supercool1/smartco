@@ -18,7 +18,7 @@ public:
     struct task{
         Fiber::ptr m_fiber;       
         std::function<void()> cb;
-        size_t stacksize = 0;
+        size_t stacksize = 1000;
         int thread_id = -1;
 
         task(){

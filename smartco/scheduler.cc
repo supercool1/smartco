@@ -86,9 +86,8 @@ void Scheduler::run(){
         }
         // 判断协程实例是否存在，将协程实例放在这里生成，有助于性能分散到多线程上
         if(m_task.cb){
-            m_task.m_fiber.reset(new Fiber(m_task.cb, m_task.stacksize));
+            m_task.m_fiber.reset(new Fiber(m_task.cb));
         }
-
         //开始调用协程,如果协程就绪则执行，其余情况丢弃，规定只有就绪的协程才能进入执行队列
         if(m_task.m_fiber.get()!= nullptr && m_task.m_fiber->getstatus() == Fiber::status::READY){
             m_task.m_fiber->swapin();

@@ -46,6 +46,7 @@ void Fiber::swapout(){
 void Fiber::run(){
     Fiber::ptr cur = get_cur_fiber();
     cur->m_cb();
+    cur->setstatus(HOLD);
     cur->swapout();
 }
 

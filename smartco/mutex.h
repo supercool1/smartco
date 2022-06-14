@@ -32,7 +32,7 @@ public:
     }
 private:
     T* m_mutex;
-    bool is_lock;
+    // bool is_lock;
 };
 
 template<class T>
@@ -74,7 +74,7 @@ public:
     ~WriteMutexLock(){
         m_mutex->unlock();
     }
-    
+
     void lock(){
         if(!is_lock){
             m_mutex->lock();

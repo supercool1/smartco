@@ -10,11 +10,21 @@ void IOmanager::readAll(){
     while(read(filedes[0], dummy, sizeof(dummy)) > 0);      
 }
 
+void IOmanager::event_ctx_list_resize(int size){
+    event_ctx_list.resize(size);
+    for(size_t i = 0; i < event_ctx_list.size(); ++i) {
+        if(!event_ctx_list[i]) {
+            event_ctx_list[i] = new event_ctx;
+            event_ctx_list[i]->fd = i;
+        }
+    }
+}
+
 IOmanager::IOmanager(int thread_nums, bool use_main_thread, const std::string& name ):
            Scheduler(thread_nums, use_main_thread, name){
     // 初始化epoll
     epfd = epoll_create(INT8_MAX);
-    event_ctx_list.resize(10);
+    event_ctx_list_resize(32);
     // 设置管道，用于唤醒当前主协程，防止锁定线程执行的协程遇见线程被阻塞很久到epoll_wait上
     pipe(filedes);
     SetNonblocking(filedes[0]);
@@ -37,7 +47,7 @@ bool IOmanager::addEvent(int fd, IOmanager::Event event, std::function<void()> c
         mutex.unlock();
         // 修改event_ctx_list信息，所以要上写锁
         WriteMutexLock<RWMutex> mutex2(&rwmutex);
-        event_ctx_list.resize(event_ctx_list.size()*1.5);
+        event_ctx_list_resize(event_ctx_list.size()*1.5);
     }
 
     // 对队列中的一个事件进行操作，上局部锁
@@ -111,7 +121,7 @@ bool IOmanager::delAndRunEvent(int fd, IOmanager::Event event){
     }
     event_ctx* ctx = event_ctx_list[fd];
     mutex.unlock();
-    if((event & ctx->events) == 0) return;
+    if((event & ctx->events) == 0) return false;
     MutexLock<Mutex> mutex2(&ctx->m_mutex);
     Event newevent = (Event)(ctx->events & ~event);
 
@@ -133,7 +143,6 @@ bool IOmanager::delAndRunEvent(int fd, IOmanager::Event event){
 }
 
 void IOmanager::idle(){
-
     //创建空间存储返回的epoll事件，最多一次接受256个事件
     const uint64_t MAX_EVNETS = 256;
     epoll_event* event_get = new epoll_event[MAX_EVNETS];
@@ -183,9 +192,9 @@ void IOmanager::idle(){
 }
 
 
-
-
-
+IOmanager* IOmanager::get_cur_iomanager(){
+    return dynamic_cast<IOmanager*>(Scheduler::get_cur_scheduler());
+}
 
 
 }

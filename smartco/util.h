@@ -15,6 +15,8 @@ namespace smartco{
     void SetNonblocking(int fd);
 
     void DelNonblocking(int fd);
-
+    
+    // 获取当前时间，精度ms
+    uint64_t GetCurTime();
 }
 #endif

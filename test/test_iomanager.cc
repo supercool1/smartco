@@ -124,7 +124,6 @@ void fun2(){
     {   
         sleep(1);
         smartco::IOmanager::get_cur_iomanager()->addEvent(file[0], smartco::IOmanager::READ);
-        smartco::Fiber::Yield();
         printf("trigger read fun\n");
         uint8_t dummy[256];
         while(read(file[0], dummy, sizeof(dummy)) > 0);      
@@ -139,14 +138,12 @@ void fun3(){
     {
         sleep(1);
         smartco::IOmanager::get_cur_iomanager()->addEvent(file[1], smartco::IOmanager::WRITE);
-        smartco::Fiber::Yield();
         printf("trigger write fun\n");
-        uint8_t dummy[256];
-        write(file[1], str, 11);  
+        write(file[1], str, 11); 
     }
 }
 void test_fiber_wake_up(){
-    int rt = pipe(file);
+    pipe(file);
     setnonblocking(file[0]);
     setnonblocking(file[1]);
     iomanager = new smartco::IOmanager();
@@ -171,7 +168,7 @@ void fun_cb(){
 
 
 void test_fun_cb(){
-    int rt = pipe(file);
+    pipe(file);
     setnonblocking(file[0]);
     setnonblocking(file[1]);
     iomanager = new smartco::IOmanager();

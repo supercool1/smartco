@@ -36,7 +36,9 @@ if(TEXT)
    add_executable(test_scheduler ${CMAKE_SOURCE_DIR}/test/test_scheduler.cc)
    target_link_libraries(test_scheduler  smartco -pthread)
    
-
    add_executable(test_iomanager ${CMAKE_SOURCE_DIR}/test/test_iomanager.cc)
    target_link_libraries(test_iomanager  smartco -pthread)
+
+   add_executable(test_timer ${CMAKE_SOURCE_DIR}/test/test_timer.cc)
+   target_link_libraries(test_timer  smartco -pthread)
 endif()

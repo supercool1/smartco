@@ -35,6 +35,7 @@ Fiber::Fiber(std::function<void()> cb, size_t stacksize):m_cb(cb),m_stack_size(s
 }
 void Fiber::swapin(){
     set_cur_fiber(get_fiber_ptr());
+    setstatus(READY);
     swapcontext(cur_thread_main_Fiber->get_ctx(), &m_context_t);
 }
 

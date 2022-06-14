@@ -59,9 +59,7 @@ bool IOmanager::addEvent(int fd, IOmanager::Event event, std::function<void()> c
     ep_event.data.ptr = ctx;
     // EPOLLET不会存在于上下文的ctx->events中
     ep_event.events = EPOLLET | event | ctx->events;
-
     ctx->events = (Event)(ctx->events | event);
-
     int rt2 = epoll_ctl(epfd, op, fd, &ep_event);
     if (rt2)
     {
@@ -77,6 +75,8 @@ bool IOmanager::addEvent(int fd, IOmanager::Event event, std::function<void()> c
     }else{
         m_task->cb = nullptr;
         m_task->m_fiber = Fiber::get_cur_fiber();
+        mutex2.unlock();
+        Fiber::Yield();
     }
     return true;
 
@@ -91,7 +91,6 @@ bool IOmanager::delEvent(int fd, IOmanager::Event event){
     }
     event_ctx* ctx = event_ctx_list[fd];
     mutex.unlock();
-
     MutexLock<Mutex> mutex2(&ctx->m_mutex);
     Event newevent = (Event)(ctx->events & ~event);
     // 判断取消当前事件事件是否为空，如果为空会将事件从epoll中删除
@@ -99,9 +98,7 @@ bool IOmanager::delEvent(int fd, IOmanager::Event event){
     epoll_event ep_event;
     ep_event.data.fd = fd;
     ep_event.events = EPOLLET | newevent;
-
     ctx->events = newevent;
-
     int rt2 = epoll_ctl(epfd, op, fd, &ep_event);
     if (rt2)
     {

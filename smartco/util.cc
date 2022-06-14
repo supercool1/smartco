@@ -28,5 +28,11 @@ namespace smartco{
         fcntl(fd, F_SETFL, new_option);
     }
 
+    uint64_t GetCurTime(){
+        struct timespec ts;
+        clock_gettime(CLOCK_MONOTONIC_COARSE, &ts);
+        return ts.tv_nsec / (1000 * 1000) + ts.tv_sec * 1000;
+    }
+
 }
 
